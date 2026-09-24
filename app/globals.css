@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand-primary: #059669;
+    --brand-dark: #064e3b;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Custom styles for glowing effects and print layouts */
+.yuca-gradient {
+  background: linear-gradient(135deg, #064e3b 0%, #059669 50%, #10b981 100%);
+}
+
+.yuca-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.qr-card-shadow {
+  box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.15), 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-passport, #printable-passport * {
+    visibility: visible;
+  }
+  #printable-passport {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    box-shadow: none !important;
+    border: 2px solid #059669 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
