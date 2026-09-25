@@ -112,8 +112,13 @@ export const getBatchById = async (
   try {
     const { id } = req.params;
 
-    const batch = await prisma.cassavaBatch.findUnique({
-      where: { id },
+    const batch = await prisma.cassavaBatch.findFirst({
+      where: {
+        OR: [
+          { id },
+          { consignmentId: id },
+        ],
+      },
     });
 
     if (!batch) {

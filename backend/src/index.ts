@@ -10,10 +10,23 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
-// CORS configuration: allow Next.js app and common dev ports
+// CORS configuration: allow Next.js app, Vercel deployments, and public verification
 app.use(
   cors({
-    origin: [FRONTEND_URL, "http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: (requestOrigin, callback) => {
+      // Allow direct requests, configured frontend, vercel domains, localhost, or any client
+      if (!requestOrigin) return callback(null, true);
+      if (
+        FRONTEND_URL === "*" ||
+        requestOrigin === FRONTEND_URL ||
+        requestOrigin.endsWith(".vercel.app") ||
+        requestOrigin.includes("localhost") ||
+        requestOrigin.includes("127.0.0.1")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

@@ -93,7 +93,7 @@ export const batchApi = {
     }
 
     const localList = getLocalBatches();
-    return localList.find((b) => b.id === id) || null;
+    return localList.find((b) => b.id === id || b.consignmentId === id) || null;
   },
 
   /**
