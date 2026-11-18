@@ -12,6 +12,16 @@
     @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-500 selection:text-white;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+
+  /* Disable number increment/decrement stepper spinners across browsers */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
 }
 
 /* Custom styles for glowing effects and print layouts */

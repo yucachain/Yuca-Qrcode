@@ -38,11 +38,11 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   const [consignmentId, setConsignmentId] = useState("");
   const [companyName, setCompanyName] = useState("YucaChain");
   const [variety, setVariety] = useState("TME 419");
-  const [moistureContent, setMoistureContent] = useState<number>(12.4);
-  const [cyanideContent, setCyanideContent] = useState<number>(8.5);
-  const [weight, setWeight] = useState<number>(2500);
+  const [moistureContent, setMoistureContent] = useState<string>("12.4");
+  const [cyanideContent, setCyanideContent] = useState<string>("8.5");
+  const [weight, setWeight] = useState<string>("2500");
   const [weightUnit, setWeightUnit] = useState<"kg" | "tonnes" | "bags">("kg");
-  const [averageWeight, setAverageWeight] = useState<number>(0.85);
+  const [averageWeight, setAverageWeight] = useState<string>("0.85");
   const [averageWeightUnit, setAverageWeightUnit] = useState<"kg" | "g">("kg");
 
   // Generate unique consignment ID on mount
@@ -60,8 +60,10 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   const [remark, setRemark] = useState("Clean harvest, optimal root firmness, low cyanide rating. Verified ready for premium milling.");
 
   // Calculated safety indicators
-  const cyanideSafety = getCyanideSafety(cyanideContent);
-  const moistureStatus = getMoistureStatus(moistureContent);
+  const numMoisture = parseFloat(moistureContent) || 0;
+  const numCyanide = parseFloat(cyanideContent) || 0;
+  const cyanideSafety = getCyanideSafety(numCyanide);
+  const moistureStatus = getMoistureStatus(numMoisture);
   const hubDuration = calculateHubDuration(entryDate, exitDate);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -72,11 +74,11 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
       consignmentId: consignmentId.trim() || generateConsignmentId(),
       companyName: companyName.trim() || "YucaChain",
       variety: variety.trim() || "Standard Cassava",
-      moistureContent: Number(moistureContent),
-      cyanideContent: Number(cyanideContent),
-      weight: Number(weight),
+      moistureContent: parseFloat(moistureContent) || 0,
+      cyanideContent: parseFloat(cyanideContent) || 0,
+      weight: parseFloat(weight) || 0,
       weightUnit,
-      averageWeight: Number(averageWeight),
+      averageWeight: parseFloat(averageWeight) || 0,
       averageWeightUnit,
       entryDate,
       exitDate,
@@ -92,11 +94,11 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
     setConsignmentId(generateConsignmentId());
     setCompanyName("YucaChain");
     setVariety("Yellow Cassava (TMS 01/1368)");
-    setMoistureContent(11.8);
-    setCyanideContent(7.2);
-    setWeight(3800);
+    setMoistureContent("11.8");
+    setCyanideContent("7.2");
+    setWeight("3800");
     setWeightUnit("kg");
-    setAverageWeight(0.92);
+    setAverageWeight("0.92");
     setAverageWeightUnit("kg");
     setRemark("Biofortified Vitamin A roots. Uniform tubers with minimal peel blemishes, inspected at reception bay.");
   };
@@ -220,12 +222,13 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
             <div className="relative">
               <input
                 id="moisture-content-input"
-                type="number"
-                step="0.1"
-                min="0"
-                max="100"
+                type="text"
+                inputMode="decimal"
                 value={moistureContent}
-                onChange={(e) => setMoistureContent(parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^[0-9]*\.?[0-9]*$/.test(val)) setMoistureContent(val);
+                }}
                 required
                 className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                 placeholder="e.g. 12.4"
@@ -247,12 +250,13 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
             <div className="relative">
               <input
                 id="cyanide-content-input"
-                type="number"
-                step="0.1"
-                min="0"
-                max="500"
+                type="text"
+                inputMode="decimal"
                 value={cyanideContent}
-                onChange={(e) => setCyanideContent(parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^[0-9]*\.?[0-9]*$/.test(val)) setCyanideContent(val);
+                }}
                 required
                 className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 font-semibold focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
                 placeholder="e.g. 8.5"
@@ -273,11 +277,13 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
             <div className="flex rounded-lg overflow-hidden border border-slate-200">
               <input
                 id="weight-input"
-                type="number"
-                step="any"
-                min="0.1"
+                type="text"
+                inputMode="decimal"
                 value={weight}
-                onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^[0-9]*\.?[0-9]*$/.test(val)) setWeight(val);
+                }}
                 required
                 className="flex-1 min-w-0 px-3 py-2 bg-slate-50 text-slate-900 text-sm font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 placeholder="2500"
@@ -303,11 +309,13 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
             <div className="flex rounded-lg overflow-hidden border border-slate-200">
               <input
                 id="avg-weight-input"
-                type="number"
-                step="0.01"
-                min="0.01"
+                type="text"
+                inputMode="decimal"
                 value={averageWeight}
-                onChange={(e) => setAverageWeight(parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^[0-9]*\.?[0-9]*$/.test(val)) setAverageWeight(val);
+                }}
                 required
                 className="flex-1 min-w-0 px-3 py-2 bg-slate-50 text-slate-900 text-sm font-semibold focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 placeholder="0.85"
