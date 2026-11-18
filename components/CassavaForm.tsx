@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Sprout,
   Calendar,
@@ -15,6 +15,7 @@ import {
   Hash,
   Scale,
   FileText,
+  RefreshCw,
 } from "lucide-react";
 import { CassavaBatch } from "@/types/cassava";
 import {
@@ -33,8 +34,8 @@ interface CassavaFormProps {
 }
 
 export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerating }) => {
-  // Form State
-  const [consignmentId, setConsignmentId] = useState("CNS-2026-6386");
+  // Form State - generate fresh unique consignment ID for each new intake
+  const [consignmentId, setConsignmentId] = useState("");
   const [companyName, setCompanyName] = useState("YucaChain");
   const [varietySelect, setVarietySelect] = useState("TME 419");
   const [customVariety, setCustomVariety] = useState("");
@@ -44,6 +45,11 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   const [weightUnit, setWeightUnit] = useState<"kg" | "tonnes" | "bags">("kg");
   const [averageWeight, setAverageWeight] = useState<number>(0.85);
   const [averageWeightUnit, setAverageWeightUnit] = useState<"kg" | "g">("kg");
+
+  // Generate unique consignment ID on mount
+  useEffect(() => {
+    setConsignmentId(generateConsignmentId());
+  }, []);
 
   // Default dates
   const todayStr = new Date().toISOString().slice(0, 16);
@@ -86,7 +92,7 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   };
 
   const loadSampleData = () => {
-    setConsignmentId("CNS-2026-8491");
+    setConsignmentId(generateConsignmentId());
     setCompanyName("YucaChain");
     setVarietySelect("Yellow Cassava (TMS 01/1368)");
     setMoistureContent(11.8);
@@ -150,10 +156,21 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              <Hash className="w-3.5 h-3.5 inline mr-1 text-emerald-600" />
-              Consignment ID
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-slate-700 flex items-center">
+                <Hash className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                Consignment ID
+              </label>
+              <button
+                type="button"
+                onClick={() => setConsignmentId(generateConsignmentId())}
+                className="text-[11px] font-medium text-emerald-700 hover:text-emerald-800 flex items-center space-x-1 cursor-pointer transition-colors"
+                title="Generate a new unique consignment ID"
+              >
+                <RefreshCw className="w-3 h-3 mr-0.5" />
+                <span>New ID</span>
+              </button>
+            </div>
             <input
               id="consignment-id-input"
               type="text"
@@ -161,7 +178,7 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
               onChange={(e) => setConsignmentId(e.target.value)}
               required
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 font-mono font-medium focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-              placeholder="e.g. CNS-2026-6386"
+              placeholder="e.g. CNS-2026-XXXX"
             />
           </div>
         </div>

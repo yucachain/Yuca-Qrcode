@@ -124,11 +124,21 @@ export function encodeBatchToUrlData(batch: CassavaBatch): string {
 
 export function decodeBatchFromUrlData(encoded: string): CassavaBatch | null {
   try {
+    if (!encoded) return null;
+    // Sanitize: decode percent-encoding if present, and convert spaces back to +
+    let sanitized = encoded.trim();
+    try {
+      sanitized = decodeURIComponent(sanitized);
+    } catch (_) {
+      // already plain
+    }
+    sanitized = sanitized.replace(/ /g, "+");
+
     let decodedJson: string;
     if (typeof window !== "undefined") {
-      decodedJson = decodeURIComponent(atob(encoded));
+      decodedJson = decodeURIComponent(atob(sanitized));
     } else {
-      decodedJson = decodeURIComponent(Buffer.from(encoded, "base64").toString("utf-8"));
+      decodedJson = decodeURIComponent(Buffer.from(sanitized, "base64").toString("utf-8"));
     }
     return JSON.parse(decodedJson) as CassavaBatch;
   } catch (err) {

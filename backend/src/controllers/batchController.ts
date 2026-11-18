@@ -21,21 +21,19 @@ export const createBatch = async (
     });
 
     if (existing) {
-      // Upsert/update if it already exists with same ID
-      if (existing.id === validated.id) {
-        const updated = await prisma.cassavaBatch.update({
-          where: { id: validated.id },
-          data: validated,
-        });
-        return res.status(200).json({
-          success: true,
-          message: "Batch updated successfully",
-          data: updated,
-        });
-      }
-      return res.status(409).json({
-        success: false,
-        message: `Consignment ID ${validated.consignmentId} is already registered.`,
+      // Upsert/update if it already exists with same ID or consignmentId
+      const targetId = existing.id;
+      const updated = await prisma.cassavaBatch.update({
+        where: { id: targetId },
+        data: {
+          ...validated,
+          id: targetId,
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        message: "Batch updated successfully",
+        data: updated,
       });
     }
 

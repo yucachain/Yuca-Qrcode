@@ -35,9 +35,10 @@ export const QRCodeCard: React.FC<QRCodeCardProps> = ({ batch }) => {
     const origin =
       process.env.NEXT_PUBLIC_APP_URL ||
       (typeof window !== "undefined" ? window.location.origin : "https://yucachain.io");
-    const id = batch.consignmentId || batch.id;
-    // URL includes both id for live database lookup and data for instant offline/direct decoding
-    const fullUrl = `${origin}/verify?id=${encodeURIComponent(id)}&data=${encoded}`;
+    const batchId = batch.id;
+    const consignmentId = batch.consignmentId || "";
+    // URL includes unique batch id, consignment id, and the complete encoded payload
+    const fullUrl = `${origin}/verify?id=${encodeURIComponent(batchId)}&cid=${encodeURIComponent(consignmentId)}&data=${encodeURIComponent(encoded)}`;
     setVerificationUrl(fullUrl);
   }, [batch]);
 

@@ -33,43 +33,61 @@ function VerifyContent() {
 
     async function resolveBatch() {
       const idParam = searchParams.get("id");
+      const cidParam = searchParams.get("cid");
       const dataParam = searchParams.get("data");
 
-      // 1. First priority: Check Live PostgreSQL Database via Render API
-      if (idParam) {
-        try {
-          const remoteBatch = await batchApi.getBatchById(idParam);
-          if (remoteBatch && !cancelled) {
-            setBatch(remoteBatch);
-            setVerificationSource("database");
-            setLoading(false);
-            return;
-          }
-        } catch (e) {
-          console.warn("Live backend query delayed or unreachable, trying payload fallback:", e);
-        }
-      }
+      let resolvedFromPayload = false;
+      let payloadBatch: CassavaBatch | null = null;
 
-      // 2. Second priority: Decode immediate cryptographic QR payload
+      // 1. First priority: Decode the immediate cryptographic/embedded QR payload
+      // This represents the exact parameters entered and certified when this QR was generated
       if (dataParam) {
-        const decoded = decodeBatchFromUrlData(dataParam);
-        if (decoded && (decoded.id || decoded.consignmentId)) {
+        payloadBatch = decodeBatchFromUrlData(dataParam);
+        if (payloadBatch && (payloadBatch.id || payloadBatch.consignmentId || payloadBatch.variety)) {
           if (!cancelled) {
-            setBatch(decoded);
+            setBatch(payloadBatch);
             setVerificationSource("payload");
             setLoading(false);
+            resolvedFromPayload = true;
           }
-          return;
         }
       }
 
-      // 3. Third priority: Check local storage (if scanner opened on same browser)
-      if (idParam) {
+      // 2. Query Live PostgreSQL Database via Render API
+      const lookupKey = idParam || cidParam || payloadBatch?.id || payloadBatch?.consignmentId;
+      if (lookupKey) {
+        try {
+          const remoteBatch = await batchApi.getBatchById(lookupKey);
+          if (remoteBatch && !cancelled) {
+            // If we also had a QR payload, only use remoteBatch if it matches the unique batch ID or consignment
+            if (!payloadBatch || remoteBatch.id === payloadBatch.id || remoteBatch.consignmentId === payloadBatch.consignmentId) {
+              setBatch(remoteBatch);
+              setVerificationSource("database");
+              setLoading(false);
+              return;
+            }
+          } else if (payloadBatch) {
+            // Asynchronously sync the authentic QR batch to the database if it hasn't landed yet
+            batchApi.createBatch(payloadBatch).catch((e) => {
+              console.warn("Background batch sync failed:", e);
+            });
+          }
+        } catch (e) {
+          console.warn("Live backend query delayed or unreachable:", e);
+        }
+      }
+
+      if (resolvedFromPayload) {
+        return;
+      }
+
+      // 3. Fallback priority: Check local storage (if scanner opened on same browser)
+      if (lookupKey) {
         try {
           const stored = localStorage.getItem("yucachain_batches");
           if (stored) {
             const list: CassavaBatch[] = JSON.parse(stored);
-            const found = list.find((b) => b.id === idParam || b.consignmentId === idParam);
+            const found = list.find((b) => b.id === lookupKey || b.consignmentId === lookupKey);
             if (found && !cancelled) {
               setBatch(found);
               setVerificationSource("payload");

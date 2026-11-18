@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { CassavaBatch } from "@/types/cassava";
 import { decodeBatchFromUrlData } from "@/lib/utils";
+import { getLocalBatches } from "@/lib/api";
 
 interface QRScannerModalProps {
   isOpen: boolean;
@@ -33,18 +34,33 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
   const html5QrCodeRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Process decoded text (handles both verification URLs and direct JSON)
+  // Process decoded text (handles verification URLs, direct JSON, or encoded payloads)
   const processDecodedString = (decodedText: string): boolean => {
     try {
-      // Case 1: Verification URL with ?data=
-      if (decodedText.includes("data=")) {
-        const urlObj = new URL(decodedText);
+      // Case 1: Verification URL with ?data= or ?id=
+      if (decodedText.includes("data=") || decodedText.includes("id=")) {
+        const urlStr = decodedText.startsWith("http")
+          ? decodedText
+          : `https://yucachain.io${decodedText.startsWith("/") ? "" : "/"}${decodedText}`;
+        const urlObj = new URL(urlStr);
         const dataParam = urlObj.searchParams.get("data");
         if (dataParam) {
           const batch = decodeBatchFromUrlData(dataParam);
-          if (batch && batch.variety) {
+          if (batch && (batch.variety || batch.consignmentId || batch.id)) {
             stopCamera();
             onBatchScanned(batch);
+            onClose();
+            return true;
+          }
+        }
+
+        const idParam = urlObj.searchParams.get("id") || urlObj.searchParams.get("cid");
+        if (idParam) {
+          const localList = getLocalBatches();
+          const found = localList.find((b) => b.id === idParam || b.consignmentId === idParam);
+          if (found) {
+            stopCamera();
+            onBatchScanned(found);
             onClose();
             return true;
           }
@@ -54,7 +70,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
       // Case 2: Raw JSON string
       if (decodedText.trim().startsWith("{")) {
         const parsed = JSON.parse(decodedText);
-        if (parsed && (parsed.variety || parsed.companyName)) {
+        if (parsed && (parsed.variety || parsed.companyName || parsed.consignmentId)) {
           stopCamera();
           onBatchScanned(parsed as CassavaBatch);
           onClose();
@@ -64,7 +80,7 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({
 
       // Case 3: Base64 string directly
       const batch = decodeBatchFromUrlData(decodedText.trim());
-      if (batch && batch.variety) {
+      if (batch && (batch.variety || batch.consignmentId || batch.id)) {
         stopCamera();
         onBatchScanned(batch);
         onClose();
