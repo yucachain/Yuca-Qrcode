@@ -37,8 +37,7 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   // Form State - generate fresh unique consignment ID for each new intake
   const [consignmentId, setConsignmentId] = useState("");
   const [companyName, setCompanyName] = useState("YucaChain");
-  const [varietySelect, setVarietySelect] = useState("TME 419");
-  const [customVariety, setCustomVariety] = useState("");
+  const [variety, setVariety] = useState("TME 419");
   const [moistureContent, setMoistureContent] = useState<number>(12.4);
   const [cyanideContent, setCyanideContent] = useState<number>(8.5);
   const [weight, setWeight] = useState<number>(2500);
@@ -65,8 +64,6 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   const moistureStatus = getMoistureStatus(moistureContent);
   const hubDuration = calculateHubDuration(entryDate, exitDate);
 
-  const activeVariety = varietySelect === "Other" ? (customVariety.trim() || "Custom Variety") : varietySelect;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -74,7 +71,7 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
       id: generateBatchId(),
       consignmentId: consignmentId.trim() || generateConsignmentId(),
       companyName: companyName.trim() || "YucaChain",
-      variety: activeVariety,
+      variety: variety.trim() || "Standard Cassava",
       moistureContent: Number(moistureContent),
       cyanideContent: Number(cyanideContent),
       weight: Number(weight),
@@ -94,7 +91,7 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
   const loadSampleData = () => {
     setConsignmentId(generateConsignmentId());
     setCompanyName("YucaChain");
-    setVarietySelect("Yellow Cassava (TMS 01/1368)");
+    setVariety("Yellow Cassava (TMS 01/1368)");
     setMoistureContent(11.8);
     setCyanideContent(7.2);
     setWeight(3800);
@@ -189,29 +186,23 @@ export const CassavaForm: React.FC<CassavaFormProps> = ({ onGenerate, isGenerati
             <Sprout className="w-3.5 h-3.5 inline mr-1 text-emerald-600" />
             Variety of Cassava
           </label>
-          <select
-            id="cassava-variety-select"
-            value={varietySelect}
-            onChange={(e) => setVarietySelect(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
-          >
-            {CASSAVA_VARIETIES.map((v) => (
+          <input
+            id="cassava-variety-input"
+            type="text"
+            list="cassava-variety-suggestions"
+            value={variety}
+            onChange={(e) => setVariety(e.target.value)}
+            required
+            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 font-medium focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all"
+            placeholder="e.g. TME 419, TMS 30572, Yellow Cassava, Oko-Iyawo, or enter any variety..."
+          />
+          <datalist id="cassava-variety-suggestions">
+            {CASSAVA_VARIETIES.filter((v) => v.value !== "Other").map((v) => (
               <option key={v.value} value={v.value}>
                 {v.label}
               </option>
             ))}
-          </select>
-
-          {varietySelect === "Other" && (
-            <input
-              type="text"
-              value={customVariety}
-              onChange={(e) => setCustomVariety(e.target.value)}
-              placeholder="Specify custom cassava variety"
-              className="mt-1.5 w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-              required
-            />
-          )}
+          </datalist>
         </div>
 
         {/* Row 3: Moisture Content (%) & Cyanide Content (ppm) - Note text removed */}
